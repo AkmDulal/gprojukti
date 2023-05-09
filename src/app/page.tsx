@@ -11,16 +11,19 @@ export default function Home() {
   const [showModal, setShowModal] = useState<boolean>(false);
   const [loader, setLoader] = useState<boolean>(false);
   const [singleView, setSingleView] = useState<any>([])
+  const [pagesSize, setPagesSize] = useState<number>()
   const getApiData = () => {
     setLoader(false)
     axios.get(`/api/v1.0/store/public/store`)
       .then(res => {
         setDatalist(res?.data?.data)
+        setPagesSize(res?.data?.meta_data?.total)
         setLoader(true)
       })
   }
 
   const downloadCsv = () => {
+    setLoader(false)
     const fields = [
       'district.name',
       'name',
@@ -36,26 +39,31 @@ export default function Home() {
       'shown_in_website',
       'off_days'
     ];
-    const csv = json2csv.parse(datalist, { fields });
-    const fileName = 'data.csv';
-    const fileType = 'text/csv;charset=utf-8';
+    axios.get(`/api/v1.0/store/public/store?page_size=${pagesSize}`)
+      .then(res => {
+        setLoader(true)
+        const csv = json2csv.parse(res?.data?.data, { fields });
+        const fileName = 'data.csv';
+        const fileType = 'text/csv;charset=utf-8';
 
-    const blob = new Blob([csv], { type: fileType });
-    saveAs(blob, fileName);
+        const blob = new Blob([csv], { type: fileType });
+        saveAs(blob, fileName);
+      })
+
   }
 
   const openModal = (slug: string) => {
     const dataView = datalist?.find((el: any) => el.slug === slug)
     console.log(dataView, "dataView");
     setSingleView(dataView)
-    setShowModal(false)
+    setShowModal(true)
   }
   useEffect(() => {
     getApiData()
   }, []);
 
-  console.log(singleView, "singleView singleView");
-  console.log(datalist, "datalist datalist");
+  // console.log(singleView, "singleView singleView");
+  // console.log(datalist, "datalist datalist");
   return (
     <main className="relative min-h-screen  container px-4 mt-4 m-auto">
 
@@ -159,8 +167,8 @@ export default function Home() {
                     <td className="p-2 whitespace-nowrap item-center justify-center">
                       <div className="w-4 mr-2 transform hover:text-purple-500 hover:scale-110" onClick={() => openModal(item?.slug)}>
                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
                         </svg>
                       </div></td>
                   </tr>
